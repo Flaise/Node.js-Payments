@@ -4,7 +4,11 @@
     "dependencies": {
         "express": "4.12.2",
         "jade": "1.9.2",
-        "jasmine": "2.2.1"
+        "jasmine": "2.2.1",
+        
+        "phantom": ["// Note that phantom expects `phantomjs` to be in the system path.",
+                    "// http://phantomjs.org/download.html"],
+        "phantom": "0.7.2"
     },
     "engines": {
         "node": ">= 0.8.2"
