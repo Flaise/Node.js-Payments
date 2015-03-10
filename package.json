@@ -3,10 +3,14 @@
     "version": "0.0.0",
     "dependencies": {
         "express": "4.12.2",
-        "jade": "1.9.2"
+        "jade": "1.9.2",
+        "jasmine": "2.2.1"
     },
     "engines": {
         "node": ">= 0.8.2"
+    },
+    "scripts": {
+        "test": "node ./node_modules/jasmine/bin/jasmine.js"
     },
     "private": true
 }
