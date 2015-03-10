@@ -1,0 +1,12 @@
+{
+    "name": "stuff",
+    "version": "0.0.0",
+    "dependencies": {
+        "express": "4.12.2",
+        "jade": "1.9.2"
+    },
+    "engines": {
+        "node": ">= 0.8.2"
+    },
+    "private": true
+}
