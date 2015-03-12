@@ -1,6 +1,7 @@
 
 if error
-    p.error error
+    p.error
+        = error
 
 form(method="POST" action="." autocomplete="off")
     table
@@ -10,18 +11,18 @@ form(method="POST" action="." autocomplete="off")
         tr
             td Price:
             td
-                input(type="number")
+                input(type="text" name="currency_amount" value=reqBody.currency_amount)
         tr
             td Currency:
             td
-                select
+                select(name="currency_type" value=reqBody.currency_type)
                     each currency in currencies
                         option(value=currency.code)
                             = currency.displayName
         tr
             td Full Name:
             td
-                input(type="text")
+                input(type="text" name="name" value=reqBody.name)
         tr
             td(colspan="2")
                 br
@@ -29,20 +30,21 @@ form(method="POST" action="." autocomplete="off")
         tr
             td Name on credit card:
             td
-                input(type="text")
+                input(type="text" name="card_name" value=reqBody.card_name)
         tr
             td Credit card number:
             td
-                input(type="text")
+                input(type="text" name="card_number" value=reqBody.card_number)
         tr
             td Credit card expiration date:
             td
-                select
+                select(name="card_expiration" value=reqBody.card_expiration)
                     each expiration in expirationDates
                         option(value=expiration.code)
                             = expiration.displayName
         tr
             td Credit card CCV:
             td
-                input(type="text")
+                input(type="text" name="card_ccv" value=reqBody.card_ccv)
+    
     input(type="submit")
