@@ -20,7 +20,17 @@ Settings are specified as follows:
     "sandbox": {
         "mode": "sandbox",
         "client_id": <string>,
-        "client_secret": <string>
+        "client_secret": <string>,
+        "test_cards": {
+            "VISA": {
+                "number": <string>,
+                "expiration": <string>
+            },
+            "AMEX": {
+                "number": <string>,
+                "expiration": <string>
+            }
+        }
     }
 }
 

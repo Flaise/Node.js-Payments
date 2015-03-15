@@ -2,7 +2,7 @@
 
 var expirationDates = []
 var expiration = new Date()
-for(var i = 0; i < 12 * 6; i += 1) {
+for(var i = 0; i < 12 * 7; i += 1) {
     var monthZeroBased = expiration.getMonth()
     var realMonth = monthZeroBased + 1
     var year = expiration.getFullYear()

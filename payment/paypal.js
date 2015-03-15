@@ -47,35 +47,49 @@ PaypalGateway.prototype = {
             funding_instruments: funding_instruments
         }
         payment.payer = payer
+        
+        function formatError(method, err) {
+            var prefix = '[Paypal ' + method + ' HTTP' + err.httpStatusCode + '] '
+            
+            if(err.response.error === 'invalid_client') {
+                console.warn('Invalid Paypal client credentials. Check the server configuration.')
+                return prefix + err.response.error_description
+            }
+            else if(err.response.name === 'VALIDATION_ERROR') {
+                err.response.details.forEach(function(subErr) {
+                    if(subErr.field.indexOf('credit_card.number') > -1)
+                        prefix += '<br/>Credit Card Number: ' + subErr.issue
+                    else if(subErr.field.indexOf('amount.total') > -1)
+                        prefix += '<br/>Currency Amount: ' + subErr.issue
+                    else if(subErr.field.indexOf('credit_card') > -1)
+                        prefix += '<br/>Credit Card: ' + subErr.issue
+                    else
+                        prefix += '<br/>' + JSON.stringify(subErr)
+                })
+                return prefix
+            }
+            else if(err.response.name === 'INTERNAL_SERVICE_ERROR') {
+                return prefix + 'Paypal is experiencing technical difficulties. Try again later ' +
+                       'or contact customer support if you need immediate assistance.'
+            }
+            else if(err.response.name) {
+                return prefix + err.response.message +
+                       '<br/><a href="' + err.response.information_link + '">More information</a>'
+            }
+            else {
+                console.warn(require('util').inspect(err, true, 10))
+                return prefix + 'Unknown error.'
+            }
+        }
 
         paypal.payment.create(payment, function(err, payment) {
-            console.log(err)
             if(err)
-                return next('[Paypal payment create HTTP' + err.httpStatusCode + '] ' +
-                            err.response.error_description)
-            //req.session.paymentId = payment.id;
-            //res.render('create', { 'payment': payment })
+                return next(formatError('payment create', err))
             
-            console.log('payment')
-            console.log(payment)
-            
-                
-
-            var paymentId = req.session.paymentId
-            var payerId = req.param('PayerID')
-
-            var details = {"payer_id": payerId}
-            var payment = paypal.payment.execute(payment.id, details, function(err, payment) {
-                console.log(err)
-                if(err)
-                    return next('[Paypal payment execute HTTP' + err.httpStatusCode + '] ' +
-                                err.response.error_description)
-                
-                //res.render('execute', {'payment': payment})
-                console.log('payment')
-                console.log(payment)
+            if(payment.state === 'approved')
                 next()
-            })
+            else
+                next('Paypal returned a status of "' + payment.state + '" - expected "approved".')
         })
     }
 }

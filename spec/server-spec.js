@@ -6,6 +6,16 @@ var server = require('../server')
 var payment = require('../payment')
 var cards = require('../cards')
 
+try {
+    var paypalSettings = require('../settings/paypal').sandbox || {}
+}
+catch(err) {
+    if(err.code !== 'MODULE_NOT_FOUND')
+        throw err
+    console.warn('No configuration file found for paypal. See /settings/readme.txt.')
+    paypalSettings = {}
+}
+
 
 var port = 9001
 Browser.localhost('bunnies.com', port)
@@ -15,59 +25,96 @@ function submit() {
     return browser.pressButton('input[type="submit"]')
 }
 
-function completedForm() {
-    describe('completed form', function() {
+function expectSuccessfulPayment() {
+    expect(browser.text('.error')).toBeFalsy()
+    browser.assert.success()
+    browser.assert.element('.success')
+    expect(payment.makePayment).toHaveBeenCalled()
+    browser.assert.text('[name="card_number"]', '')
+    browser.assert.text('[name="card_ccv"]', '')
+}
+function expectRenderedError() {
+    browser.assert.element('.error')
+    expect(browser.text('.error')).toBeTruthy()
+}
+
+function payments() {
+    describe('payments', function() {
         beforeEach(function() {
             browser
                 .fill('[name="currency_amount"]', '5.00')
                 .select('[name="currency_type"]', 'USD')
                 .fill('[name="fullName"]', 'Lycalopex sechurae')
                 .fill('[name="card_name"]', 'food platformation')
-                .select('[name="card_type"]', 'DISCOVER')
-                .fill('[name="card_number"]', '41111111111111')
-                .select('[name="card_expiration"]', cards.expirationDates[5].code)
-                .fill('[name="card_ccv"]', '123')
             
             spyOn(payment, 'makePayment').and.callThrough()
         })
         
-        afterEach(function() {
-            expect(payment.makePayment).toHaveBeenCalled()
-            browser.assert.text('[name="card_number"]', '')
-            browser.assert.text('[name="card_ccv"]', '')
+        amex()
+        visa()
+    })
+}
+
+function amex() {
+    describe('amex', function() {
+        beforeEach(function() {
+            browser
+                .fill('[name="currency_amount"]', '5.00')
+                .select('[name="currency_type"]', 'USD')
+                .select('[name="card_type"]', 'AMEX')
+                .fill('[name="card_number"]', paypalSettings.test_cards.AMEX.number)
+                .select('[name="card_expiration"]', paypalSettings.test_cards.AMEX.expiration)
+                .fill('[name="card_ccv"]', '123')
         })
 
-        it('can process AMEX/USD transactions', function(done) {
-            browser
-                .select('[name="card_type"]', 'AMEX')
-                .select('[name="currency_type"]', 'USD')
+        it('can process USD transactions (Paypal)', function(done) {
             submit()
                 .then(function() {
-                    browser.assert.success()
-                    browser.assert.element('.success')
+                    expectSuccessfulPayment()
                 })
                 .finally(done)
         })
 
-        it("can not process AMEX/AUD transactions", function(done) {
+        it("can not process AUD transactions", function(done) {
             browser
-                .select('[name="card_type"]', 'AMEX')
                 .select('[name="currency_type"]', 'AUD')
             submit()
                 .then(function() {
-                    browser.assert.element('.error')
+                    expectRenderedError()
+                })
+                .finally(done)
+        })
+    })
+}
+
+function visa() {
+    describe('visa', function() {
+        beforeEach(function() {
+            browser
+                .fill('[name="currency_amount"]', '5.00')
+                .select('[name="currency_type"]', 'USD')
+                .select('[name="card_type"]', 'VISA')
+                .fill('[name="card_number"]', paypalSettings.test_cards.VISA.number)
+                .select('[name="card_expiration"]', paypalSettings.test_cards.VISA.expiration)
+                .fill('[name="card_ccv"]', '123')
+        })
+
+        it('can process EUR transactions (Paypal)', function(done) {
+            browser
+                .select('[name="currency_type"]', 'EUR')
+            submit()
+                .then(function() {
+                    expectSuccessfulPayment()
                 })
                 .finally(done)
         })
 
-        it('can process VISA/EUR transactions', function(done) {
+        it('can process SGD transactions (Braintree)', function(done) {
             browser
-                .select('[name="card_type"]', 'VISA')
-                .select('[name="currency_type"]', 'EUR')
+                .select('[name="currency_type"]', 'SGD')
             submit()
                 .then(function() {
-                    browser.assert.success()
-                    browser.assert.element('.success')
+                    expectSuccessfulPayment()
                 })
                 .finally(done)
         })
@@ -159,6 +206,6 @@ describe('server', function() {
                 .finally(done)
         })
         
-        completedForm()
+        payments()
     })
 })
