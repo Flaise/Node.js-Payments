@@ -2,12 +2,17 @@
 if error
     p.error
         = error
+if success
+    p.success
+        = success
 
 form(method="POST" action="." autocomplete="off")
     table
         tr
             td(colspan="2")
                 h2 Order
+                
+                
         tr
             td Price:
             td
@@ -22,17 +27,28 @@ form(method="POST" action="." autocomplete="off")
         tr
             td Full Name:
             td
-                input(type="text" name="name" value=reqBody.name)
+                input(type="text" name="fullName" value=reqBody.fullName)
+                
+                
         tr
             td(colspan="2")
                 br
                 h2 Payment
+                
+                
         tr
-            td Name on credit card:
+            td Name on card:
             td
                 input(type="text" name="card_name" value=reqBody.card_name)
         tr
-            td Credit card number:
+            td Card type
+            td
+                select(name="card_type" value=reqBody.card_type)
+                    each type in cardTypes
+                        option(value=type)
+                            = type
+        tr
+            td Card number:
             td
                 input(type="text" name="card_number" value=reqBody.card_number)
         tr
@@ -43,7 +59,7 @@ form(method="POST" action="." autocomplete="off")
                         option(value=expiration.code)
                             = expiration.displayName
         tr
-            td Credit card CCV:
+            td CCV:
             td
                 input(type="text" name="card_ccv" value=reqBody.card_ccv)
     

@@ -3,50 +3,79 @@
 var paypal = require('paypal-rest-sdk')
 
 
-function PaypalGateway(configuration) {
+function PaypalGateway(configuration, productionMode) {
     this.configuration = configuration
 }
 module.exports = exports = PaypalGateway
 
 PaypalGateway.prototype = {
-    supportsTransaction: function(currency, card) {
-        if(card.type === 'AMEX' && currency.code === 'USD')
-            return true
-        if(currency.code === 'USD' || currency.code === 'EUR' || currency.code === 'AUD')
+    supportsTransaction: function(currencyType, card) {
+        if(card.type === 'AMEX')
+            return currencyType.code === 'USD'
+        if(currencyType.code === 'USD' || currencyType.code === 'EUR' || currencyType.code === 'AUD')
             return true
         return false
     },
-    makePayment: function(currency, card, next) {
-        paypal.configure(configuration)
+    makePayment: function(cost, card, next) {
+        paypal.configure(this.configuration)
         
-        var sender_batch_id = Math.random().toString(36).substring(9);
-
-        var params = {
-            "sender_batch_header": {
-                "sender_batch_id": sender_batch_id,
-                "email_subject": "You have a payment"
-            },
-            "items": [
-                {
-                    "recipient_type": "EMAIL",
-                    "amount": {
-                        "value": 0.90,
-                        "currency": "USD"
-                    },
-                    "receiver": "shirt-supplier-three@mail.com",
-                    "note": "Thank you.",
-                    "sender_item_id": "item_3"
-                }
-            ]
+        var payment = {
+            "intent": "sale",
+            "transactions": [{
+                "amount": {
+                    "currency": cost.type.code,
+                    "total": cost.amount
+                },
+                "description": 'TEST TRANSACTION'
+            }]
         }
-
-        paypal.payout.create(params, function(error, payout) {
-            if(error)
-                next(error)
-            else {
-                console.log(payout)
-                next()
+        
+        var funding_instruments = [
+            {
+                "credit_card": {
+                    "type": card.type.toLowerCase(),
+                    "number": card.number,
+                    "expire_month": card.expirationMonth,
+                    "expire_year": card.expirationYear,
+                    "first_name": card.firstName,
+                    "last_name": card.lastName
+                }
             }
+        ]
+        var payer = {
+            payment_method: 'credit_card',
+            funding_instruments: funding_instruments
+        }
+        payment.payer = payer
+
+        paypal.payment.create(payment, function(err, payment) {
+            console.log(err)
+            if(err)
+                return next('[Paypal payment create HTTP' + err.httpStatusCode + '] ' +
+                            err.response.error_description)
+            //req.session.paymentId = payment.id;
+            //res.render('create', { 'payment': payment })
+            
+            console.log('payment')
+            console.log(payment)
+            
+                
+
+            var paymentId = req.session.paymentId
+            var payerId = req.param('PayerID')
+
+            var details = {"payer_id": payerId}
+            var payment = paypal.payment.execute(payment.id, details, function(err, payment) {
+                console.log(err)
+                if(err)
+                    return next('[Paypal payment execute HTTP' + err.httpStatusCode + '] ' +
+                                err.response.error_description)
+                
+                //res.render('execute', {'payment': payment})
+                console.log('payment')
+                console.log(payment)
+                next()
+            })
         })
     }
 }

@@ -9,14 +9,15 @@ function BraintreeGateway(configuration) {
 module.exports = exports = BraintreeGateway
 
 BraintreeGateway.prototype = {
-    supportsTransaction: function(currency, card) {
+    supportsTransaction: function(currencyType, card) {
         if(card.type === 'AMEX')
             return false
-        if(currency.code === 'THB' || currency.code === 'HKD' || currency.code === 'SGD')
+        if(currencyType.code === 'THB' || currencyType.code === 'HKD' || currencyType.code === 'SGD')
             return true
         return false
     },
-    makePayment: function(currency, card, next) {
+    makePayment: function(cost, card, next) {
+        return next('not implemented')
         var gateway = braintree.connect(this.configuration)
         
         gateway.transaction.sale({
@@ -39,3 +40,4 @@ BraintreeGateway.prototype = {
         })
     }
 }
+
