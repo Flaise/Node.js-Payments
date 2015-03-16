@@ -37,9 +37,19 @@ Settings are specified as follows:
 /settings/braintree.js
 module.exports = {
     "production": {
+        "environment": 
+        "merchantId": <string>,
+        "publicKey": <string>,
+        "privateKey": <string>
     },
     "sandbox": {
         "environment": require("braintree").Environment.Sandbox,
-        "merchantId": <string>
+        "merchantId": <string>,
+        "publicKey": <string>,
+        "privateKey": <string>,
+        "testCard": {
+            "number": "4111111111111111",
+            "expiration": "05/12"
+        }
     }
 }

@@ -17,11 +17,10 @@ BraintreeGateway.prototype = {
         return false
     },
     makePayment: function(cost, card, next) {
-        return next('not implemented')
         var gateway = braintree.connect(this.configuration)
         
         gateway.transaction.sale({
-            amount: currency.amount,
+            amount: cost.amount,
             creditCard: {
                 number: card.number,
                 expirationMonth: card.expirationMonth,
@@ -30,13 +29,10 @@ BraintreeGateway.prototype = {
         }, function(err, result) {
             if(err)
                 next(err)
-            else {
-                var transactionID = result.transaction.id
-                var message = result.message
-                
-                console.log(result)
+            else if(!result.success)
+                next(result.message)
+            else
                 next()
-            }
         })
     }
 }

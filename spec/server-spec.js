@@ -6,15 +6,26 @@ var server = require('../server')
 var payment = require('../payment')
 var cards = require('../cards')
 
+var paypalSettings = {testCards: {AMEX: {}, VISA: {}}}
 try {
-    var paypalSettings = require('../settings/paypal').sandbox || {}
+    paypalSettings = require('../settings/paypal').sandbox || paypalSettings
 }
 catch(err) {
     if(err.code !== 'MODULE_NOT_FOUND')
         throw err
-    console.warn('No configuration file found for paypal. See /settings/readme.txt.')
-    paypalSettings = {}
+    console.warn('No configuration file found for Paypal. See /settings/readme.txt.')
 }
+
+var braintreeSettings = {testCard: {}}
+try {
+    braintreeSettings = require('../settings/braintree').sandbox || braintreeSettings
+}
+catch(err) {
+    if(err.code !== 'MODULE_NOT_FOUND')
+        throw err
+    console.warn('No configuration file found for Braintree. See /settings/readme.txt.')
+}
+
 
 
 var port = 9001
@@ -62,8 +73,8 @@ function amex() {
                 .fill('[name="currency_amount"]', '5.00')
                 .select('[name="currency_type"]', 'USD')
                 .select('[name="card_type"]', 'AMEX')
-                .fill('[name="card_number"]', paypalSettings.test_cards.AMEX.number)
-                .select('[name="card_expiration"]', paypalSettings.test_cards.AMEX.expiration)
+                .fill('[name="card_number"]', paypalSettings.testCards.AMEX.number)
+                .select('[name="card_expiration"]', paypalSettings.testCards.AMEX.expiration)
                 .fill('[name="card_ccv"]', '123')
         })
 
@@ -94,8 +105,8 @@ function visa() {
                 .fill('[name="currency_amount"]', '5.00')
                 .select('[name="currency_type"]', 'USD')
                 .select('[name="card_type"]', 'VISA')
-                .fill('[name="card_number"]', paypalSettings.test_cards.VISA.number)
-                .select('[name="card_expiration"]', paypalSettings.test_cards.VISA.expiration)
+                .fill('[name="card_number"]', paypalSettings.testCards.VISA.number)
+                .select('[name="card_expiration"]', paypalSettings.testCards.VISA.expiration)
                 .fill('[name="card_ccv"]', '123')
         })
 
@@ -112,6 +123,8 @@ function visa() {
         it('can process SGD transactions (Braintree)', function(done) {
             browser
                 .select('[name="currency_type"]', 'SGD')
+                .fill('[name="card_number"]', braintreeSettings.testCard.number)
+                .select('[name="card_expiration"]', braintreeSettings.testCard.expiration)
             submit()
                 .then(function() {
                     expectSuccessfulPayment()
